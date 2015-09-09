@@ -38,7 +38,7 @@ defmodule DelegateBehaviour.Mixfile do
       files:        ["lib", "mix.exs", "README.md", "LICENSE"],
       contributors: ["Shunsuke Kirino"],
       licenses:     ["MIT"],
-      links:        %{},
+      links:        %{"GitHub repository" => "https://github.com/skirino/delegate_behaviour"},
     ]
   end
 end
