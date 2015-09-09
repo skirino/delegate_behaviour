@@ -1,4 +1,4 @@
-DelegateBehaviour
+delegate_behaviour
 =================
 
 Elixir macros to define modules that delegate to concrete implementations of behaviours.
