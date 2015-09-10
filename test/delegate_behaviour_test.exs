@@ -13,6 +13,7 @@ defmodule DelegateBehaviourTest do
     defcallback t({atom, integer}) :: tuple
     defcallback m(%{atom => String.t}, map) :: %{}
     defcallback f((atom, String.t -> String.t)) :: (... -> String.t)
+    defcallback w(a, b, c) :: a when a: String.t, b: (... -> String.t), c: %{atom => String.t}
   end
 
   defmodule I do
@@ -25,6 +26,7 @@ defmodule DelegateBehaviourTest do
     def t(v), do: v
     def m(v, _v2), do: v
     def f(v), do: v
+    def w(a, _b, _c), do: a
   end
 
   defmodule CT do
@@ -48,22 +50,25 @@ defmodule DelegateBehaviourTest do
   defp runtest(module) do
     f = fn a, s -> (fn -> "#{a} #{s}" end) end
 
-    assert module.i                                                       == 0
-    assert module.s("a", "b")                                             == "I.s: a b"
-    assert module.b(<<>>)                                                 == <<>>
-    assert module.l([])                                                   == []
-    assert module.k([])                                                   == []
-    assert module.t({:a, 0})                                              == {:a, 0}
-    assert module.m(%{a: "a"}, %{})                                       == %{a: "a"}
-    assert module.f(f)                                                    == f
-    assert "i() :: integer()"                                             in module.typespecs
-    assert "s(String.t(), String.t()) :: String.t()"                      in module.typespecs
-    assert "b(<<_ :: _ * 8>>) :: <<>>"                                    in module.typespecs
-    assert "l([integer()]) :: []"                                         in module.typespecs
-    assert "k(Keyword.t(integer())) :: Keyword.t(integer())"              in module.typespecs
-    assert "t({atom(), integer()}) :: tuple()"                            in module.typespecs
-    assert "m(%{atom() => String.t()}, %{}) :: %{}"                       in module.typespecs
-    assert "f((atom(), String.t() -> String.t())) :: (... -> String.t())" in module.typespecs
+    assert module.i                 == 0
+    assert module.s("a", "b")       == "I.s: a b"
+    assert module.b(<<>>)           == <<>>
+    assert module.l([])             == []
+    assert module.k([])             == []
+    assert module.t({:a, 0})        == {:a, 0}
+    assert module.m(%{a: "a"}, %{}) == %{a: "a"}
+    assert module.f(f)              == f
+    assert module.w("a", f, %{})    == "a"
+
+    assert "i() :: integer()"                                                                       in module.typespecs
+    assert "s(String.t(), String.t()) :: String.t()"                                                in module.typespecs
+    assert "b(<<_ :: _ * 8>>) :: <<>>"                                                              in module.typespecs
+    assert "l([integer()]) :: []"                                                                   in module.typespecs
+    assert "k(Keyword.t(integer())) :: Keyword.t(integer())"                                        in module.typespecs
+    assert "t({atom(), integer()}) :: tuple()"                                                      in module.typespecs
+    assert "m(%{atom() => String.t()}, %{}) :: %{}"                                                 in module.typespecs
+    assert "f((atom(), String.t() -> String.t())) :: (... -> String.t())"                           in module.typespecs
+    assert "w(a, b, c) :: a when a: String.t(), b: (... -> String.t()), c: %{atom() => String.t()}" in module.typespecs
   end
 
   test "CT should delegate to I" do

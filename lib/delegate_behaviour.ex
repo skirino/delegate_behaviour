@@ -4,9 +4,13 @@ defmodule DelegateBehaviour do
     quote bind_quoted: [behaviour: behaviour, impl_module: impl_module] do
       @behaviour behaviour
       for callback <- DelegateBehaviour.callbacks(behaviour) do
-        {name, arity, arg_types, ret_type} = DelegateBehaviour.analyze_callback(callback)
+        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(callback)
         vars = DelegateBehaviour.make_vars(arity, __MODULE__)
-        @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
+        if Enum.empty?(constraints) do
+          @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
+        else
+          @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type) when [unquote_splicing(constraints)]
+        end
         defdelegate unquote(name)(unquote_splicing(vars)), to: impl_module
       end
     end
@@ -21,9 +25,13 @@ defmodule DelegateBehaviour do
       end
 
       for callback <- DelegateBehaviour.callbacks(behaviour) do
-        {name, arity, arg_types, ret_type} = DelegateBehaviour.analyze_callback(callback)
+        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(callback)
         vars = DelegateBehaviour.make_vars(arity, __MODULE__)
-        @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
+        if Enum.empty?(constraints) do
+          @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
+        else
+          @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type) when [unquote_splicing(constraints)]
+        end
         def unquote(name)(unquote_splicing(vars)) do
           _delegate_behaviour_module_switcher.unquote(name)(unquote_splicing(vars))
         end
@@ -48,12 +56,23 @@ defmodule DelegateBehaviour do
 
   @doc false
   def analyze_callback(callback) do
-    [{{name, arity}, [{:type, _, :fun, [{:type, _, :product, args}, ret]}]}] = callback
-    {name, arity, types_of(args), type_of(ret)}
+    case callback do
+      [{{name, arity}, [{:type, _, :bounded_fun, [f, constraints]}]}] -> {name, arity, args_ret_type_pair(f), Enum.map(constraints, &analyze_constraint/1)}
+      [{{name, arity}, [f]}]                                          -> {name, arity, args_ret_type_pair(f), []}
+    end
+  end
+
+  defp args_ret_type_pair({:type, _, :fun, [{:type, _, :product, args}, ret]}) do
+    {types_of(args), type_of(ret)}
+  end
+
+  defp analyze_constraint({:type, _, :constraint, [{:atom, _, :is_subtype}, [{:var, _, type_param_name}, t]]}) do
+    {type_param_name, type_of(t)}
   end
 
   defp type_of(tuple) do
     case tuple do
+      {:var, _, n}                                              -> Macro.var(n, Elixir)
       {:ann_type, _, [{:var, _, _}, t]}                         -> type_of(t)
       {:remote_type, _, [{:atom, _, m}, {:atom, _, n}, types]}  -> quote do: unquote(m).unquote(n)(unquote_splicing(types_of(types)))
       {:type, _, :binary, [{:integer, _, i}, {:integer, _, j}]} -> bitstring_type(i, j)
