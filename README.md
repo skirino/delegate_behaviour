@@ -2,7 +2,7 @@ delegate_behaviour
 =================
 
 Elixir macros to define modules that delegate to concrete implementations of behaviours.
-Useful to select specific implementation of behaviour in a pluggable way, like dependency injection.
+Useful to separate "logic to select specific implementation of behaviour" and "caller of behaviour interface" (similar to dependency injection).
 
 - [Hex package information](https://hex.pm/packages/delegate_behaviour)
 
