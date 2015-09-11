@@ -107,8 +107,6 @@ defmodule DelegateBehaviour do
 
   defp union_type(types) do
     case types do
-      []       -> raise ":union in behaviour spec is incorrect!"
-      [_]      -> raise ":union in behaviour spec is incorrect!"
       [t1, t2] -> quote do: unquote(t1) | unquote(t2)
       [h | t]  -> quote do: unquote(h) | unquote(union_type(t))
     end
