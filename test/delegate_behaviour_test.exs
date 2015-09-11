@@ -14,6 +14,7 @@ defmodule DelegateBehaviourTest do
     defcallback m(%{atom => String.t}, map) :: %{}
     defcallback f((atom, String.t -> String.t)) :: (... -> String.t)
     defcallback w(a, b, c) :: a when a: String.t, b: (... -> String.t), c: %{atom => String.t}
+    defcallback u(:atom1 | :atom2 | String.t) :: :ok
   end
 
   defmodule I do
@@ -27,6 +28,7 @@ defmodule DelegateBehaviourTest do
     def m(v, _v2), do: v
     def f(v), do: v
     def w(a, _b, _c), do: a
+    def u(_v), do: :ok
   end
 
   defmodule CT do
@@ -59,6 +61,7 @@ defmodule DelegateBehaviourTest do
     assert module.m(%{a: "a"}, %{}) == %{a: "a"}
     assert module.f(f)              == f
     assert module.w("a", f, %{})    == "a"
+    assert module.u(:atom1)         == :ok
 
     assert "i() :: integer()"                                                                       in module.typespecs
     assert "s(String.t(), String.t()) :: String.t()"                                                in module.typespecs
@@ -69,6 +72,7 @@ defmodule DelegateBehaviourTest do
     assert "m(%{atom() => String.t()}, %{}) :: %{}"                                                 in module.typespecs
     assert "f((atom(), String.t() -> String.t())) :: (... -> String.t())"                           in module.typespecs
     assert "w(a, b, c) :: a when a: String.t(), b: (... -> String.t()), c: %{atom() => String.t()}" in module.typespecs
+    assert "u(:atom1 | :atom2 | String.t()) :: :ok"                                                 in module.typespecs
   end
 
   test "CT should delegate to I" do

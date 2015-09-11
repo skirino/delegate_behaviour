@@ -72,6 +72,7 @@ defmodule DelegateBehaviour do
 
   defp type_of(tuple) do
     case tuple do
+      {:atom, _, a}                                             -> a
       {:var, _, n}                                              -> Macro.var(n, Elixir)
       {:ann_type, _, [{:var, _, _}, t]}                         -> type_of(t)
       {:remote_type, _, [{:atom, _, m}, {:atom, _, n}, types]}  -> quote do: unquote(m).unquote(n)(unquote_splicing(types_of(types)))
@@ -83,6 +84,7 @@ defmodule DelegateBehaviour do
       {:type, _, :map, [{:type, _, :map_field_assoc, [k, v]}]}  -> quote do: %{unquote(type_of(k)) => unquote(type_of(v))}
       {:type, _, :fun, [{:type, _, :any}, r]}                   -> quote do: (... -> unquote(type_of(r)))
       {:type, _, :fun, [{:type, _, :product, types}, r]}        -> quote do: ((unquote_splicing(types_of(types))) -> unquote(type_of(r)))
+      {:type, _, :union, types}                                 -> union_type(types_of(types))
       {:type, _, t, types}                                      -> quote do: unquote(t)(unquote_splicing(types_of(types)))
     end
   end
@@ -99,5 +101,14 @@ defmodule DelegateBehaviour do
   end
   defp bitstring_type(0, j) do
     quote do: <<_ :: _ * unquote(j)>>
+  end
+
+  defp union_type(types) do
+    case types do
+      []       -> raise ":union in behaviour spec is incorrect!"
+      [_]      -> raise ":union in behaviour spec is incorrect!"
+      [t1, t2] -> quote do: unquote(t1) | unquote(t2)
+      [h | t]  -> quote do: unquote(h) | unquote(union_type(t))
+    end
   end
 end
