@@ -73,6 +73,7 @@ defmodule DelegateBehaviour do
   defp type_of(tuple) do
     case tuple do
       {:atom, _, a}                                             -> a
+      {:integer, _, n}                                          -> n
       {:var, _, n}                                              -> Macro.var(n, Elixir)
       {:ann_type, _, [{:var, _, _}, t]}                         -> type_of(t)
       {:remote_type, _, [{:atom, _, m}, {:atom, _, n}, types]}  -> quote do: unquote(m).unquote(n)(unquote_splicing(types_of(types)))
@@ -85,6 +86,7 @@ defmodule DelegateBehaviour do
       {:type, _, :fun, [{:type, _, :any}, r]}                   -> quote do: (... -> unquote(type_of(r)))
       {:type, _, :fun, [{:type, _, :product, types}, r]}        -> quote do: ((unquote_splicing(types_of(types))) -> unquote(type_of(r)))
       {:type, _, :union, types}                                 -> union_type(types_of(types))
+      {:type, _, :range, [{:integer, _, l}, {:integer, _, u}]}  -> quote do: unquote(l) .. unquote(u)
       {:type, _, t, types}                                      -> quote do: unquote(t)(unquote_splicing(types_of(types)))
     end
   end
