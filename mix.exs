@@ -4,7 +4,7 @@ defmodule DelegateBehaviour.Mixfile do
   def project do
     [
       app:             :delegate_behaviour,
-      version:         "0.1.2",
+      version:         "0.1.3",
       elixir:          "~> 1.0",
       build_embedded:  Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -36,10 +36,10 @@ defmodule DelegateBehaviour.Mixfile do
 
   defp package do
     [
-      files:        ["lib", "mix.exs", "README.md", "LICENSE"],
-      contributors: ["Shunsuke Kirino"],
-      licenses:     ["MIT"],
-      links:        %{"GitHub repository" => "https://github.com/skirino/delegate_behaviour"},
+      files:       ["lib", "mix.exs", "README.md", "LICENSE"],
+      maintainers: ["Shunsuke Kirino"],
+      licenses:    ["MIT"],
+      links:       %{"GitHub repository" => "https://github.com/skirino/delegate_behaviour"},
     ]
   end
 end
