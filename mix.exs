@@ -24,6 +24,7 @@ defmodule DelegateBehaviour.Mixfile do
   defp deps do
     [
       {:coverex, "~> 1.4", only: :test},
+      {:dialyze, "~> 0.2", only: :dev},
     ]
   end
 

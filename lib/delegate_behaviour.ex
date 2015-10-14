@@ -81,6 +81,7 @@ defmodule DelegateBehaviour do
       {:type, _, :list, types}                                  -> quote do: [unquote_splicing(types_of(types))]
       {:type, _, :tuple, :any}                                  -> quote do: tuple()
       {:type, _, :tuple, types}                                 -> quote do: {unquote_splicing(types_of(types))}
+      {:type, _, :map, :any}                                    -> quote do: %{}
       {:type, _, :map, []}                                      -> quote do: %{}
       {:type, _, :map, [{:type, _, :map_field_assoc, [k, v]}]}  -> quote do: %{unquote(type_of(k)) => unquote(type_of(v))}
       {:type, _, :fun, [{:type, _, :any}, r]}                   -> quote do: (... -> unquote(type_of(r)))
