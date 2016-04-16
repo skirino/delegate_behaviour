@@ -44,7 +44,7 @@ defmodule DelegateBehaviour do
     if n == 0 do
       []
     else
-      Enum.map(0 .. n-1, fn i -> Macro.var(String.to_atom("a#{i}"), module) end)
+      Enum.map(0 .. n-1, fn i -> Macro.var(String.to_atom("arg#{i}"), module) end)
     end
   end
 

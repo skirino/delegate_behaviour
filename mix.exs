@@ -1,6 +1,8 @@
 defmodule DelegateBehaviour.Mixfile do
   use Mix.Project
 
+  @github_url "https://github.com/skirino/delegate_behaviour"
+
   def project do
     [
       app:             :delegate_behaviour,
@@ -11,8 +13,8 @@ defmodule DelegateBehaviour.Mixfile do
       deps:            deps,
       description:     description,
       package:         package,
-      source_url:      "https://github.com/skirino/delegate_behaviour",
-      homepage_url:    "https://github.com/skirino/delegate_behaviour",
+      source_url:      @github_url,
+      homepage_url:    @github_url,
       test_coverage:   [tool: Coverex.Task, coveralls: true],
     ]
   end
@@ -39,7 +41,7 @@ defmodule DelegateBehaviour.Mixfile do
       files:       ["lib", "mix.exs", "README.md", "LICENSE"],
       maintainers: ["Shunsuke Kirino"],
       licenses:    ["MIT"],
-      links:       %{"GitHub repository" => "https://github.com/skirino/delegate_behaviour"},
+      links:       %{"GitHub repository" => @github_url},
     ]
   end
 end

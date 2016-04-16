@@ -68,14 +68,14 @@ defmodule DelegateBehaviourTest do
 
     assert "i() :: integer()"                                                                      in module.typespecs
     assert "s(String.t(), String.t()) :: String.t()"                                               in module.typespecs
-    assert "b(<<_ :: _ * 8>>) :: <<>>"                                                             in module.typespecs
+    assert "b(<<_::_ * 8>>) :: <<>>"                                                               in module.typespecs
     assert "l([integer()]) :: []"                                                                  in module.typespecs
     assert "k(Keyword.t(integer())) :: Keyword.t(integer())"                                       in module.typespecs
     assert "t({atom(), integer()}) :: tuple()"                                                     in module.typespecs
     assert "m(%{atom() => String.t()}, %{}) :: %{}"                                                in module.typespecs
     assert "f((atom(), String.t() -> String.t())) :: (... -> String.t())"                          in module.typespecs
     assert "u(:atom1 | :atom2 | String.t()) :: :ok"                                                in module.typespecs
-    assert "r(0 .. 10) :: 0"                                                                       in module.typespecs
+    assert "r(0..10) :: 0"                                                                         in module.typespecs
     assert "w(a, b, c) :: a when a: String.t(), b: (() -> String.t()), c: %{atom() => String.t()}" in module.typespecs
   end
 
