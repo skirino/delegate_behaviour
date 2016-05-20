@@ -1,6 +1,12 @@
 defmodule DelegateBehaviour do
-  defmacro compile_time(behaviour, do: block) do
-    {impl_module, _bindings} = Code.eval_quoted(block, [], __CALLER__)
+  defmacro compile_time(behaviour, arg) do
+    impl_module =
+      case arg do
+        [do: block] ->
+          {mod, _bindings} = Code.eval_quoted(block, [], __CALLER__)
+          mod
+        module_alias -> module_alias
+      end
     quote bind_quoted: [behaviour: behaviour, impl_module: impl_module] do
       @behaviour behaviour
       for callback <- DelegateBehaviour.callbacks(behaviour) do

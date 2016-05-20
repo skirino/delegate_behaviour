@@ -33,10 +33,17 @@ defmodule DelegateBehaviourTest do
     def w(a, _b, _c), do: a
   end
 
-  defmodule CT do
+  defmodule CT1 do
     DelegateBehaviour.compile_time(B) do
       I
     end
+
+    spec = Module.get_attribute(__MODULE__, :spec) |> Macro.escape
+    def typespecs, do: unquote(spec) |> Enum.map(fn {:spec, expr, _} -> Macro.to_string(expr) end)
+  end
+
+  defmodule CT2 do
+    DelegateBehaviour.compile_time(B, I)
 
     spec = Module.get_attribute(__MODULE__, :spec) |> Macro.escape
     def typespecs, do: unquote(spec) |> Enum.map(fn {:spec, expr, _} -> Macro.to_string(expr) end)
@@ -79,8 +86,9 @@ defmodule DelegateBehaviourTest do
     assert "w(a, b, c) :: a when a: String.t(), b: (() -> String.t()), c: %{atom() => String.t()}" in module.typespecs
   end
 
-  test "CT should delegate to I" do
-    runtest(CT)
+  test "CT1/CT2 should delegate to I" do
+    runtest(CT1)
+    runtest(CT2)
   end
 
   test "RT should delegate to I" do

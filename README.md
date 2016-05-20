@@ -61,6 +61,9 @@ There are two variants of delegations:
     2
     ```
 
+  If the target module that you want to delegate to is fixed and no do-end block is needed,
+  you can simply write `DelegateBehaviour.compile_time(B, Impl)`.
+
 - Choosing target implementation at runtime
 
     ```ex
