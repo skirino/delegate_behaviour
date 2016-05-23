@@ -10,6 +10,7 @@ defmodule DelegateBehaviour.Mixfile do
       elixir:          "~> 1.0",
       build_embedded:  Mix.env == :prod,
       start_permanent: Mix.env == :prod,
+      compilers:       compilers,
       deps:            deps,
       description:     description,
       package:         package,
@@ -23,10 +24,16 @@ defmodule DelegateBehaviour.Mixfile do
     []
   end
 
+  defp compilers do
+    additional = if Mix.env == :prod, do: [], else: [:exref]
+    Mix.compilers ++ additional
+  end
+
   defp deps do
     [
       {:coverex, "~> 1.4", only: :test},
       {:dialyze, "~> 0.2", only: :dev},
+      {:exref  , "~> 0.1", only: [:dev, :test]},
     ]
   end
 
