@@ -3,7 +3,13 @@ require DelegateBehaviour
 defmodule DelegateBehaviourTest do
   use ExUnit.Case
 
+  defmodule Type do
+    @type remote :: String.t
+  end
+
   defmodule B do
+    @type local :: String.t
+
     use Behaviour
     defcallback i :: integer
     defcallback s(s1 :: String.t, String.t) :: String.t
@@ -16,6 +22,9 @@ defmodule DelegateBehaviourTest do
     defcallback u(:atom1 | :atom2 | String.t) :: :ok
     defcallback r(0..10) :: 0
     defcallback w(a, b, c) :: a when a: String.t, b: (() -> String.t), c: %{atom => String.t}
+
+    alias Type
+    defcallback user_defined(Type.remote) :: local
   end
 
   defmodule I do
@@ -31,6 +40,7 @@ defmodule DelegateBehaviourTest do
     def u(_v), do: :ok
     def r(_r), do: 0
     def w(a, _b, _c), do: a
+    def user_defined(s), do: s
   end
 
   defmodule CT1 do
@@ -72,6 +82,7 @@ defmodule DelegateBehaviourTest do
     assert module.u(:atom1)                 == :ok
     assert module.r(3..5)                   == 0
     assert module.w("a", fn -> "" end, %{}) == "a"
+    assert module.user_defined("a")         == "a"
 
     assert "i() :: integer()"                                                                      in module.typespecs
     assert "s(String.t(), String.t()) :: String.t()"                                               in module.typespecs
@@ -84,6 +95,7 @@ defmodule DelegateBehaviourTest do
     assert "u(:atom1 | :atom2 | String.t()) :: :ok"                                                in module.typespecs
     assert "r(0..10) :: 0"                                                                         in module.typespecs
     assert "w(a, b, c) :: a when a: String.t(), b: (() -> String.t()), c: %{atom() => String.t()}" in module.typespecs
+    assert "user_defined(DelegateBehaviourTest.Type.remote()) :: DelegateBehaviourTest.B.local()"  in module.typespecs
   end
 
   test "CT1/CT2 should delegate to I" do

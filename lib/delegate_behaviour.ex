@@ -10,7 +10,7 @@ defmodule DelegateBehaviour do
     quote bind_quoted: [behaviour: behaviour, impl_module: impl_module] do
       @behaviour behaviour
       for callback <- DelegateBehaviour.callbacks(behaviour) do
-        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(callback)
+        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(behaviour, callback)
         vars = DelegateBehaviour.make_vars(arity, __MODULE__)
         if Enum.empty?(constraints) do
           @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
@@ -31,7 +31,7 @@ defmodule DelegateBehaviour do
       end
 
       for callback <- DelegateBehaviour.callbacks(behaviour) do
-        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(callback)
+        {name, arity, {arg_types, ret_type}, constraints} = DelegateBehaviour.analyze_callback(behaviour, callback)
         vars = DelegateBehaviour.make_vars(arity, __MODULE__)
         if Enum.empty?(constraints) do
           @spec unquote(name)(unquote_splicing(arg_types)) :: unquote(ret_type)
@@ -61,45 +61,46 @@ defmodule DelegateBehaviour do
   end
 
   @doc false
-  def analyze_callback(callback) do
+  def analyze_callback(behaviour, callback) do
     case callback do
-      [{{name, arity}, [{:type, _, :bounded_fun, [f, constraints]}]}] -> {name, arity, args_ret_type_pair(f), Enum.map(constraints, &analyze_constraint/1)}
-      [{{name, arity}, [f]}]                                          -> {name, arity, args_ret_type_pair(f), []}
+      [{{name, arity}, [{:type, _, :bounded_fun, [f, constraints]}]}] -> {name, arity, args_ret_type_pair(behaviour, f), Enum.map(constraints, &analyze_constraint(behaviour, &1))}
+      [{{name, arity}, [f]}]                                          -> {name, arity, args_ret_type_pair(behaviour, f), []}
     end
   end
 
-  defp args_ret_type_pair({:type, _, :fun, [{:type, _, :product, args}, ret]}) do
-    {types_of(args), type_of(ret)}
+  defp args_ret_type_pair(behaviour, {:type, _, :fun, [{:type, _, :product, args}, ret]}) do
+    {types_of(behaviour, args), type_of(behaviour, ret)}
   end
 
-  defp analyze_constraint({:type, _, :constraint, [{:atom, _, :is_subtype}, [{:var, _, type_param_name}, t]]}) do
-    {type_param_name, type_of(t)}
+  defp analyze_constraint(behaviour, {:type, _, :constraint, [{:atom, _, :is_subtype}, [{:var, _, type_param_name}, t]]}) do
+    {type_param_name, type_of(behaviour, t)}
   end
 
-  defp type_of(tuple) do
+  defp type_of(behaviour, tuple) do
     case tuple do
       {:atom, _, a}                                             -> a
       {:integer, _, n}                                          -> n
       {:var, _, n}                                              -> Macro.var(n, Elixir)
-      {:ann_type, _, [{:var, _, _}, t]}                         -> type_of(t)
-      {:remote_type, _, [{:atom, _, m}, {:atom, _, n}, types]}  -> quote do: unquote(m).unquote(n)(unquote_splicing(types_of(types)))
+      {:ann_type, _, [{:var, _, _}, t]}                         -> type_of(behaviour, t)
+      {:remote_type, _, [{:atom, _, m}, {:atom, _, n}, types]}  -> quote do: unquote(m).unquote(n)(unquote_splicing(types_of(behaviour, types)))
+      {:user_type, _, t, type_params}                           -> quote do: unquote(behaviour).unquote(t)(unquote_splicing(types_of(behaviour, type_params)))
       {:type, _, :binary, [{:integer, _, i}, {:integer, _, j}]} -> bitstring_type(i, j)
-      {:type, _, :list, types}                                  -> quote do: [unquote_splicing(types_of(types))]
+      {:type, _, :list, types}                                  -> quote do: [unquote_splicing(types_of(behaviour, types))]
       {:type, _, :tuple, :any}                                  -> quote do: tuple()
-      {:type, _, :tuple, types}                                 -> quote do: {unquote_splicing(types_of(types))}
+      {:type, _, :tuple, types}                                 -> quote do: {unquote_splicing(types_of(behaviour, types))}
       {:type, _, :map, :any}                                    -> quote do: %{}
       {:type, _, :map, []}                                      -> quote do: %{}
-      {:type, _, :map, [{:type, _, :map_field_assoc, [k, v]}]}  -> quote do: %{unquote(type_of(k)) => unquote(type_of(v))}
-      {:type, _, :fun, [{:type, _, :any}, r]}                   -> quote do: (... -> unquote(type_of(r)))
-      {:type, _, :fun, [{:type, _, :product, types}, r]}        -> quote do: ((unquote_splicing(types_of(types))) -> unquote(type_of(r)))
-      {:type, _, :union, types}                                 -> union_type(types_of(types))
+      {:type, _, :map, [{:type, _, :map_field_assoc, [k, v]}]}  -> quote do: %{unquote(type_of(behaviour, k)) => unquote(type_of(behaviour, v))}
+      {:type, _, :fun, [{:type, _, :any}, r]}                   -> quote do: (... -> unquote(type_of(behaviour, r)))
+      {:type, _, :fun, [{:type, _, :product, types}, r]}        -> quote do: ((unquote_splicing(types_of(behaviour, types))) -> unquote(type_of(behaviour, r)))
+      {:type, _, :union, types}                                 -> union_type(types_of(behaviour, types))
       {:type, _, :range, [{:integer, _, l}, {:integer, _, u}]}  -> quote do: unquote(l) .. unquote(u)
-      {:type, _, t, types}                                      -> quote do: unquote(t)(unquote_splicing(types_of(types)))
+      {:type, _, t, types}                                      -> quote do: unquote(t)(unquote_splicing(types_of(behaviour, types)))
     end
   end
 
-  defp types_of(tuples) do
-    Enum.map(tuples, &type_of/1)
+  defp types_of(behaviour, tuples) do
+    Enum.map(tuples, &type_of(behaviour, &1))
   end
 
   defp bitstring_type(0, 0) do
