@@ -6,7 +6,7 @@ defmodule DelegateBehaviour.Mixfile do
   def project do
     [
       app:             :delegate_behaviour,
-      version:         "0.1.4",
+      version:         "0.1.5",
       elixir:          "~> 1.0",
       build_embedded:  Mix.env == :prod,
       start_permanent: Mix.env == :prod,
